@@ -1,0 +1,28 @@
+- hosts: 'prod'
+  tasks:
+    - name: Install AUR packages with yay
+      ansible.builtin.shell:
+        cmd: "yay -S --noconfirm {{ item }}"
+      loop:
+          - waybar-hyprland
+          - swaybg 
+          - swaylock-effects 
+          - wlogout
+          - mako 
+          - rofi
+          - nautilus
+          - ttf-jetbrains-mono-nerd 
+          - noto-fonts-emoji 
+          - polkit-gnome
+          - python-requests
+          - starship 
+          - swappy
+          - grim
+          - slurp
+          - pamixer
+          - brightnessctl
+          - gvfs 
+          - bluez
+          - bluez-utils
+          - lxappearance
+          - xfce4-settings 
