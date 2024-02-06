@@ -90,7 +90,7 @@
         - postman-bin
         - giggle
         - lf
-        - godot-git
+        - godot-mono-git
         - balena-etcher
         - virtualbox
       become: yes
