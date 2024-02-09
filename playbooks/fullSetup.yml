@@ -111,7 +111,6 @@
         - krita
         - discord
         - vesktop
-        - flameshot
       become: yes
       become_user: kopy
     
