@@ -93,6 +93,8 @@
         - godot-mono
         - balena-etcher
         - virtualbox
+        - npm
+        - base-devel
       become: yes
       become_user: kopy
 
