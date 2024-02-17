@@ -71,6 +71,7 @@
         - pipewire-alsa
         - pipewire-jack
         - easyeffects
+        - lsp-plugins
         - qjackctl
       
     - name: Installing dev kits
