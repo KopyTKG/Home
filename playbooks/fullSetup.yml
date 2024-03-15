@@ -74,23 +74,30 @@
         - lsp-plugins
         - qjackctl
       
+    - name: Installing core apps
+      ansible.builtin.shell:
+        cmd: "yay -Syu --noconfirm {{ item }}"
+      loop:
+        - cups
+        - neovim
+        - zsh
+        - lf
+
     - name: Installing dev kits
       ansible.builtin.shell:
         cmd: "yay -Syu --noconfirm {{ item }}"
       loop:
+        - android-studio
         - nodejs
         - code
         - docker
-        - neovim
         - docker-compose
         - dotnet-sdk-7.0
         - dotnet-runtime-7.0
         - bottles
-        - zsh
         - neofetch
         - postman-bin
         - giggle
-        - lf
         - godot-mono
         - balena-etcher
         - virtualbox
@@ -196,12 +203,24 @@
       become: yes
       become_user: kopy
 
+    - name: Set zsh as default
+      ansible.builtin.shell: |
+        usermod -s /usr/bin/zsh kopy
+      become: yes
+
+
     - name: Enable zerotier
       ansible.builtin.shell: |
         systemctl enable zerotier-one.service
         systemctl start zerotier-one.service
       become: yes
-
+    
+    - name: Enable bluetooth
+      ansible.builtin.shell: |
+        systemctl enable bluetooth.service
+        systemctl start bluetooth.service
+      become: yes
+    
     - name: Enable docker
       ansible.builtin.shell: |
         systemctl enable docker.service
