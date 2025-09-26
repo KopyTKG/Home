@@ -1,5 +1,6 @@
 # Home Arch setup
 
+## Description
 Basic `archlinux` setup done with scripts.
 
 ## Scripts
