@@ -98,9 +98,20 @@ sudo systemctl enable --now prowlarr
 
 [link](https://radarr.video/)
 
-|----- | -------- |
-| Port | Protocol |
-| 7878 | TCP |
+<table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>7878</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+</table>
 
 Install `radarr` from AUR using `yay`:
 
@@ -118,9 +129,20 @@ sudo systemctl enable --now radarr
 
 [link](https://sonarr.tv/)
 
-|----- | -------- |
-| Port | Protocol |
-| 8989 | TCP |
+<table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>8989</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+</table>
 
 Install `sonarr` from AUR using `yay`:
 
@@ -138,9 +160,20 @@ sudo systemctl enable --now sonarr
 
 [link](https://github.com/userdocs/qbittorrent-nox-static)
 
-|----- | -------- |
-| Port | Protocol |
-| 8080 | TCP |
+<table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>8080</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+</table>
 
 Install `nox` from AUR using `yay`:
 
@@ -158,10 +191,25 @@ sudo systemctl enable --now qbittorrent-nox
 
 [link](https://github.com/FlareSolverr/FlareSolverr)
 
-|----- | -------- |
-| Port | Protocol |
-| 8191 | TCP |
-| 8192 | TCP |
+ <table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>8191</td>
+            <td>TCP</td>
+        </tr>
+        <tr>
+            <td>8192</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+
+</table>
 
 _Installation is done via podman container:_
 
