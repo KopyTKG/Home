@@ -61,7 +61,7 @@ sudo systemctl enable --now podman-restart.service
 > Because the server is running Arch linux, i've decided to go the AUR route for installing the \*arr stack. I used `yay` as aur helper.
 
 <details>
-<summary><h2>\*arr stack</h2></summary>
+<summary><h2>*arr stack</h2></summary>
 
 ### Prowlarr
 
