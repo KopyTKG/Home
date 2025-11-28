@@ -216,7 +216,7 @@ _Installation is done via podman container:_
 Create `compose.yaml` file:
 
 ```bash
-tee ~/compose.yaml >> /dev/null <<EOF
+tee ~/compose-flare.yaml >> /dev/null <<EOF
 services:
   flaresolverr:
     image: flaresolverr/flaresolverr:latest
@@ -232,7 +232,56 @@ EOF
 Start the container (depends on [Podman installation](#podman-installation)):
 
 ```bash
-sudo podman-compose -f ~/compose.yaml up -d
+sudo podman-compose -f ~/compose-flare.yaml up -d
+```
+
+</details>
+
+<details>
+<summary><h2>Monitoring</h2></summary>
+
+### Uptime Kuma
+
+[link](https://uptime.kuma.pet/)
+
+<table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>3001</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+</table>
+
+_Installation is done via podman container:_
+
+Create `compose.yaml` file:
+
+```bash
+tee ~/compose-uptimekuma.yaml >> /dev/null <<EOF
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./data:/app/data
+    cap_add:
+      - NET_RAW
+EOF
+```
+
+Start the container (depends on [Podman installation](#podman-installation)):
+
+```bash
+sudo podman-compose -f ~/compose-uptimekuma.yaml up -d
 ```
 
 </details>
