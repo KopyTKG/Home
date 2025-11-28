@@ -67,9 +67,20 @@ sudo systemctl enable --now podman-restart.service
 
 [link](https://prowlarr.com/)
 
-|----- | -------- |
-| Port | Protocol |
-| 9696 | TCP |
+<table>
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Protocol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>9696</td>
+            <td>TCP</td>
+        </tr>
+    </tbody>
+</table>
 
 Install `prowlarr` from AUR using `yay`:
 
