@@ -16,3 +16,71 @@
    - `nginx`: as reverse proxy
    - `certbot`: for ssl certificates
    - `certbot-dns-cloudflare`: for cloudflare dns challenge
+
+<details>
+<summary><h2>\*arr stack</h2></summary>
+
+> [!NOTE]
+> Because the server is running Arch linux, i've decided to go the AUR route for installing the \*arr stack. I used `yay` as aur helper.
+
+### Prowlarr
+
+[link](https://prowlarr.com/)
+
+|----- | -------- |
+| Port | Protocol |
+| 9696 | HTTP |
+
+Install `prowlarr` from AUR using `yay`:
+
+```bash
+yay -S prowlarr
+```
+
+Start and enable the service:
+
+```bash
+sudo systemctl enable --now prowlarr
+```
+
+### Radarr
+
+[link](https://radarr.video/)
+
+|----- | -------- |
+| Port | Protocol |
+| 7878 | HTTP |
+
+Install `radarr` from AUR using `yay`:
+
+```bash
+yay -S radarr
+```
+
+Start and enable the service:
+
+```bash
+sudo systemctl enable --now radarr
+```
+
+### Sonarr
+
+[link](https://sonarr.tv/)
+
+|----- | -------- |
+| Port | Protocol |
+| 8989 | HTTP |
+
+Install `sonarr` from AUR using `yay`:
+
+```bash
+yay -S sonarr
+```
+
+Start and enable the service:
+
+```bash
+sudo systemctl enable --now sonarr
+```
+
+</details>
