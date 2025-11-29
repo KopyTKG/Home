@@ -285,3 +285,300 @@ sudo podman-compose -f ~/compose-uptimekuma.yaml up -d
 ```
 
 </details>
+
+<details>
+<summary><h2>Zerotier hosting</h2></summary>
+
+### TBD
+
+</details>
+
+<details>
+<summary><h2>Infrastructure</h2></summary>
+
+### Prerequisites
+
+- Cloudflare account with domain added
+- API token with DNS edit permissions
+
+#### Nginx installation
+
+```bash
+sudo pacman -S nginx
+```
+
+Enable and start nginx service
+
+```bash
+sudo systemctl enable --now nginx
+```
+
+#### Certbot installation
+
+```bash
+sudo pacman -S certbot certbot-dns-cloudflare
+```
+
+### Cloudflare DNS challenge setup
+
+Create Cloudflare API token file
+
+```bash
+mkdir -p ~/.secrets/certbot
+```
+
+Fill in the file with your API token
+
+```bash
+tee ~/.secrets/certbot/cloudflare.ini >> /dev/null <<EOF
+dns_cloudflare_api_token = YOUR_API_TOKEN_HERE
+EOF
+```
+
+Set proper permissions
+
+```bash
+chmod 600 ~/.secrets/certbot/cloudflare.ini
+```
+
+### Obtaining SSL certificates
+
+Run certbot with cloudflare dns challenge
+
+```bash
+sudo certbot certonly \
+  --dns-cloudflare \
+  --dns-cloudflare-credentials ~/.secrets/certbot/cloudflare.ini \
+  -d 'yourdomain.com' \
+  -d '*.yourdomain.com' \
+  --agree-tos \
+  --non-interactive
+```
+
+Replace `yourdomain.com` with your actual domain name.
+This will obtain a wildcard SSL certificate for your domain.
+
+### Nginx reverse proxy setup
+
+Create NGING configuration folder
+
+```bash
+sudo mkdir -p /etc/nginx/conf.d
+```
+
+Edit the file `/etc/nginx/nginx.conf` to include the conf.d directory
+
+```bash
+# Add
+include /etc/nginx/conf.d/*.conf;
+# at the end of /etc/nginx/nginx.conf file inside http block
+```
+
+Add your subdomain configuration file (mine is `lab.conf` based on `*.lab.thekrew.app`)
+
+```bash
+sudo touch /etc/nginx/conf.d/lab.conf
+```
+
+Example for `lab.conf`:
+
+```bash
+# ---------------------------------------
+# 1. GLOBAL SSL SETTINGS
+# ---------------------------------------
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 10m;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers HIGH:!aNULL:!MD5;
+
+# Point to your new certs here
+ssl_certificate /etc/letsencrypt/live/lab.thekrew.app/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/lab.thekrew.app/privkey.pem;
+
+# ---------------------------------------
+# 2. HTTP -> HTTPS REDIRECT
+# ---------------------------------------
+server {
+    listen 80;
+    server_name *.lab.thekrew.app;
+    return 301 https://$host$request_uri;
+}
+
+# ---------------------------------------
+# 3. SERVICES (Repeat this block for each app)
+# ---------------------------------------
+
+# SONARR
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name sonarr.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://127.0.0.1:8989;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# RADARR
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name radarr.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://127.0.0.1:7878;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# PROWLARR
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name prowlarr.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://127.0.0.1:9696;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# NOX (QBITTORRENT)
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name nox.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# UPTIME KUMA
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name kuma.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# HOME ASSISANT
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ha.lab.thekrew.app;
+
+    location / {
+        proxy_pass http://10.25.0.11:8123;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# UNIFI
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ui.lab.thekrew.app;
+
+    location / {
+        proxy_pass https://10.25.0.2;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# PLEX
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name plex.lab.thekrew.app;
+
+    location / {
+        proxy_pass https://10.25.0.21:32400;
+
+        # Standard Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+### Start nginx + certbot renewal service
+
+Reload nginx to apply changes
+
+```bash
+sudo systemctl reload nginx
+```
+
+Start and enable certbot renewal service
+
+```bash
+sudo systemctl enable --now certbot-renew.timer
+```
