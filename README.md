@@ -3,6 +3,7 @@
 ## Table of Contents
 
 1. [**Arch server**](arch-server/README.md)
+2. [**LAB**](lab/README.md)
 
 ## Description
 
