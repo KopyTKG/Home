@@ -1,0 +1,96 @@
+---
+# ---------------------------------------------------------
+# PLAY 1: PREPARE ALL NODES (OS SETTINGS)
+# ---------------------------------------------------------
+- name: Prepare Rocky Linux for K3s
+  hosts: k3s_cluster
+  become: yes
+  tasks:
+    - name: Disable Swap (Critical for K8s)
+      shell: |
+        swapoff -a
+        sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+      when: ansible_swaps | default([]) | length > 0
+
+    - name: Enable IPv4 Forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: Install tar and container-selinux
+      dnf:
+        name:
+          - tar
+          - container-selinux
+        state: present
+
+    - name: Configure Firewalld for K3s (Open Ports)
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - 6443/tcp # API Server
+        - 10250/tcp # Kubelet Metrics
+        - 8472/udp # Flannel VXLAN (Overlay Network)
+      notify: Reload Firewalld
+
+  handlers:
+    - name: Reload Firewalld
+      service:
+        name: firewalld
+        state: reloaded
+
+# ---------------------------------------------------------
+# PLAY 2: INSTALL MASTER (NODE-1)
+# ---------------------------------------------------------
+- name: Install K3s Master
+  hosts: master
+  become: yes
+  tasks:
+    - name: Install K3s Server
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Wait for K3s to start
+      wait_for:
+        port: 6443
+        delay: 5
+        timeout: 300
+
+    - name: Get Join Token
+      slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: token_base64
+
+    - name: Share Token with Cluster
+      set_fact:
+        k3s_token: "{{ token_base64.content | b64decode | trim }}"
+        master_ip: "{{ ansible_host }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['node'] }}"
+
+    - name: Configure Hybrid Mode (Untaint Master)
+      shell: |
+        /usr/local/bin/kubectl taint nodes {{ inventory_hostname }} node-role.kubernetes.io/master:NoSchedule- || true
+        /usr/local/bin/kubectl taint nodes {{ inventory_hostname }} node-role.kubernetes.io/control-plane:NoSchedule- || true
+      register: untaint_result
+      changed_when: "'untouched' not in untaint_result.stderr"
+      failed_when: false
+
+# ---------------------------------------------------------
+# PLAY 3: JOIN WORKERS (NODE 2-4)
+# ---------------------------------------------------------
+- name: Join K3s Workers
+  hosts: node
+  become: yes
+  tasks:
+    - name: Install K3s Agent
+      shell: "curl -sfL https://get.k3s.io | K3S_URL=https://{{ master_ip }}:6443 K3S_TOKEN={{ k3s_token }} sh -"
+      args:
+        creates: /usr/local/bin/k3s-agent

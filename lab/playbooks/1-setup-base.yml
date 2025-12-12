@@ -1,0 +1,56 @@
+---
+- name: Cluster Basic Setup & Networking
+  hosts: all
+  become: yes
+  tasks:
+    # --- 1. FIREWALL & TIME ---
+    - name: Configure Firewall (Allow NTP)
+      ansible.posix.firewalld:
+        service: ntp
+        permanent: yes
+        state: enabled
+        immediate: yes
+    # --- 2. TIME SYNC ---
+    - name: Configure Chrony (CESNET servers)
+      copy:
+        dest: /etc/chrony.conf
+        content: |
+          server tik.cesnet.cz iburst
+          server tak.cesnet.cz iburst
+          sourcedir /run/chrony-dhcp
+          driftfile /var/lib/chrony/drift
+          makestep 1.0 3
+          rtcsync
+          logdir /var/log/chrony
+      notify: Restart chronyd
+    # --- 3. Ensure chronyd is running and enabled ---
+    - name: Ensure chronyd is running and enabled
+      systemd:
+        name: chronyd
+        state: started
+        enabled: yes
+    # --- 4. HOSTS FILE ---
+    - name: Reset /etc/hosts to minimal default
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+          ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+          # --- ANSIBLE MANAGED BLOCK BELOW ---
+
+    # --- 5. Populate /etc/hosts with Inventory IPs ---
+    - name: Populate /etc/hosts with Inventory IPs
+      lineinfile:
+        path: /etc/hosts
+        line: >-
+          {{ hostvars[item].ansible_host }} {{ item }} {{ hostvars[item].ansible_fqdn | default('') }}
+        state: present
+      loop: "{{ groups['all'] }}"
+      when: hostvars[item].ansible_host is defined
+
+  handlers:
+    - name: Restart chronyd
+      systemd:
+        name: chronyd
+        state: restarted

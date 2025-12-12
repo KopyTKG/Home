@@ -15,3 +15,20 @@
 
 > [!IMPORTANT]
 > By default, the blades do not have BIOS support for PCIE NVMe drives. To enable it, you need to modify by adding driver to the BIOS and then flash it.
+
+## Software setup
+
+- `Node-1` K3s Tainted node - Master + Worker
+- `Node-2` K3s Worker node
+- `Node-3` K3s Worker node
+- `Node-4` K3s Worker node
+
+## Ansible
+
+- `Inventory` located in `lab/inventory/hosts.ini`
+- `Playbooks` located in `lab/playbooks/`
+
+### Playbooks
+
+1. `update.yml` - Updates and upgrades all packages on all nodes
+2. `1-setup-base.yml` - Basic setup of the nodes (chrony, firewall, `/etc/hosts`, etc.)
