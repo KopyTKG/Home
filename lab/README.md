@@ -30,5 +30,8 @@
 
 ### Playbooks
 
+- `startup.yml` - Starts all VMs via `ipmitool` commands
+
 1. `update.yml` - Updates and upgrades all packages on all nodes
 2. `1-setup-base.yml` - Basic setup of the nodes (chrony, firewall, `/etc/hosts`, etc.)
+3. `2-setup-k3s.yml` - Installs K3s on all nodes
