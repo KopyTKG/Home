@@ -2,7 +2,71 @@
 - name: Cluster Basic Setup & Networking
   hosts: all
   become: yes
+  vars:
+    admin_user: kopy
+    zsh_content: |
+      # .zshrc
+      [[ -f /etc/zshrc ]] && source /etc/zshrc
+      PROMPT='%n@%m %1~ %# '
+      setopt CORRECT
+
+      typeset -U path
+      path=("$HOME/.local/bin" "$HOME/bin" $path)
+      export PATH
+
+      export KUBECONFIG=~/.kube/config
+
+      if [[ -d ~/.zshrc.d ]]; then
+          for rc in ~/.zshrc.d/*; do
+              [[ -f "$rc" ]] && source "$rc"
+          done
+      fi
+
+      HISTFILE=~/.zsh_history
+      HISTSIZE=1000
+      SAVEHIST=1000
+
+      # Enable syntax highlighting if available
+      if [ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+          source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+      fi
+
+      autoload -Uz compinit && compinit   
+      export EDITOR='nvim'
+      export VISUAL='nvim'
+
+      alias la='ls -la'
+    neovim_repo: https://github.com/kopytkg/nvim.git
+
   tasks:
+    # --- 0. INSTALL EPEL ---
+    - name: Install EPEL Release
+      dnf:
+        name: epel-release
+        state: present
+
+    # --- 0.1 INSTALL BASIC PACKAGES ---
+    - name: Install basic packages
+      yum:
+        name:
+          - chrony
+          - btop
+          - git
+          - zsh
+        state: present
+
+    # --- 0.2 INSTALL NEOVIM NEW VERSION ---
+    - name: Remove system neovim
+      dnf:
+        name: neovim
+        state: absent
+
+    - name: Download Neovim AppImage
+      get_url:
+        url: https://github.com/neovim/neovim/releases/download/v0.11.5/nvim-linux-x86_64.appimage
+        dest: /usr/local/bin/nvim
+        mode: "0755"
+
     # --- 1. FIREWALL & TIME ---
     - name: Configure Firewall (Allow NTP)
       ansible.posix.firewalld:
@@ -10,6 +74,7 @@
         permanent: yes
         state: enabled
         immediate: yes
+
     # --- 2. TIME SYNC ---
     - name: Configure Chrony (CESNET servers)
       copy:
@@ -23,6 +88,7 @@
           rtcsync
           logdir /var/log/chrony
       notify: Restart chronyd
+
     # --- 3. Ensure chronyd is running and enabled ---
     - name: Ensure chronyd is running and enabled
       systemd:
@@ -48,6 +114,35 @@
         state: present
       loop: "{{ groups['all'] }}"
       when: hostvars[item].ansible_host is defined
+
+    # --- 6. SET ZSH AS DEFAULT SHELL ---
+    - name: Set zsh as default shell for root
+      user:
+        name: root
+        shell: /bin/zsh
+
+    # --- 6.1 SET ZSH AS DEFAULT SHELL FOR ADMIN USER ---
+    - name: Set zsh as default shell for admin user
+      user:
+        name: "{{ admin_user }}"
+        shell: /bin/zsh
+
+    # --- 7. CREATE RC FILE FOR ZSH ---
+    - name: Create .zshrc for admin user
+      copy:
+        dest: "/home/{{ admin_user }}/.zshrc"
+        content: "{{ zsh_content }}"
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0644"
+
+    # --- 8. SETUP NEOVIM FOR ADMIN USER ---
+    - name: Clone neovim config repository for admin user
+      git:
+        repo: "{{ neovim_repo }}"
+        dest: "/home/{{ admin_user }}/.config/nvim"
+        version: master
+        force: yes
 
   handlers:
     - name: Restart chronyd

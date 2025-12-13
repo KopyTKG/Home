@@ -22,6 +22,7 @@
 - `Node-2` K3s Worker node
 - `Node-3` K3s Worker node
 - `Node-4` K3s Worker node
+- `OS` Rocky Linux 9.7
 
 ## Ansible
 
